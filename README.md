@@ -6,6 +6,7 @@
 # just a basic demo about how to get peeraddr info
 # 1.demo_udp_basic.cpp for how udp get peeraddr info
 # 2.getnameinfo.cpp for how tcp get peeraddr info
+# 3.udp_connect.cpp for how udp bind peeraddr info and using read/write as a io interface input/output operation
 #
 # and so basic, good for new guys.
 # welcome to share your idea with us.
