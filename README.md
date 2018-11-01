@@ -5,7 +5,7 @@
 #
 # 1.demo_udp_basic.cpp for how udp get peeraddr info.
 # 2.getnameinfo.cpp for how tcp get peeraddr info.
-# 3.udp_connect.cpp for how udp bind peeraddr info and using read/write as a io interface input/output operation.
+# 3.udp_connect.cpp for how udp bind peeraddr info and using read/write as a std io interface input/output operation.
 # 4.broadcast.cpp for how udp socket doing broadcast IO.
 # 5.multicast.cpp for how udp socket doing multicast IO.
 #
