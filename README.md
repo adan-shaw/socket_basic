@@ -2,6 +2,7 @@
 # All copyright and other proprietary notices \
 # shall be retained on all reproductions.
 # date: 2018/10/10
+# update: 2018/12/05
 #
 # 1.demo_udp_basic.cpp for how udp get peeraddr info.
 # 2.getnameinfo.cpp for how tcp get peeraddr info.
