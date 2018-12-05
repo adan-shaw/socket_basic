@@ -1,5 +1,5 @@
 //编译
-//g++ -ggdb3 -o x ./getnameinfo.cpp
+//g++ -ggdb3 -o x ./demo_tcp_basic.cpp
 
 #include <netinet/in.h> // for IPPROTO_TCP
 #include <arpa/inet.h> // for inet_addr
@@ -18,7 +18,6 @@
 #include <time.h> // for time
 #include <string.h> // for strlen
 
-#include <netdb.h> // for getnameinfo
 
 //宏定义
 #define srv_ip "127.0.0.1"
@@ -26,10 +25,12 @@
 #define BACKLOG 64 //监听队列最大长度 64
 #define io_buf_max 2048 // 缓冲区max
 
+
 //全局变量
 int ppid = 0;//父进程pid
 int sfd_li = 0;
 int sfd_cli = 0;
+
 
 //函数前置声明
 //客户端执行链接操作 -- fork() 子进程
@@ -41,6 +42,8 @@ int io2himself(int sfd_acc);
 //退出回收资源
 void inline free_test_sfd(void);
 
+
+
 //测试主函数
 int main(void){
   //创建tcp 流式 socket
@@ -49,7 +52,6 @@ int main(void){
 		printf("socket() fail, errno = %d\n", errno);
 		return -1;
 	}
-
   //创建tcp 流式 socket for client
   sfd_cli = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if(sfd_cli == -1){
@@ -58,18 +60,13 @@ int main(void){
 		return -1;
 	}
 
-  //设置地址重用 -- 不设置重用, 可能导致二次调用程序的时候, bind() 失败
-  //因为系统资源释放没有那么快??
-  int opt_val = true;
-  opt_val = setsockopt(sfd_li, SOL_SOCKET, SO_REUSEADDR, \
-							&opt_val, sizeof(int));
-	if(opt_val == -1){
-		printf("set_sockopt_reuseaddr() fail, errno = %d\n", errno);
-		free_test_sfd();
-		return -1;
-	}
 
-  opt_val = true;
+  //设置地址重用 -- 不设置重用, 可能导致二次调用程序的时候, bind() 失败
+  //bind() socket 最好设置重用!! 因为系统使用端口之后, 需要等几秒才会再次投入使用.
+  //真实服务器环境中, 也需要对动态端口设置重用.
+  //但是动态端口有1w 多个, 这里测试只有2 个动态端口, 端口十分充足, 
+  //为了节省代码, 就不做重用了.
+  int opt_val = true;
   opt_val = setsockopt(sfd_li, SOL_SOCKET, SO_REUSEADDR, \
 							&opt_val, sizeof(int));
 	if(opt_val == -1){
@@ -182,53 +179,6 @@ int main(void){
           printf("son pthread has not end, it's a fault\n");
         
       }//accept if end
-
-
-      //***********************
-      //加插任务: 解析对方的ip and port
-      //根据自身的sfd, 反向解析出struct sockaddr* [服务器只知道sfd_acc]
-      //(如果struct sockaddr* 是局部变量, 可能会丢失, 所以自身解析也有用)
-      struct sockaddr addr1;
-      bzero(&addr1,sizeof(struct sockaddr));
-      socklen_t len1 = sizeof(struct sockaddr);//uint32
-      int tmp = getsockname(sfd_acc,&addr1,&len1);
-      if(tmp == -1)
-        printf("getsockname() fail, errno = %d\n",errno);
-      else{
-        char host_buf[64];
-        char serv_buf[64];
-        bzero(&host_buf,sizeof(host_buf));
-        bzero(&serv_buf,sizeof(serv_buf));
-        tmp = getnameinfo(&addr1, len1, host_buf, sizeof(host_buf),\
-                          serv_buf, sizeof(host_buf), NI_NAMEREQD);
-        if(tmp != 0)
-          printf("getnameinfo() fail!!errno = %d\n", errno);
-        else
-          printf("1.host_buf = %s, serv_buf = %s\n",host_buf,serv_buf);
-      }
-      
-      //根据对方的sfd, 反向解析出struct sockaddr* [服务器只知道sfd_acc]
-      bzero(&addr1,sizeof(struct sockaddr));
-      len1 = sizeof(struct sockaddr);
-      tmp = getpeername(sfd_acc,&addr1,&len1);
-      if(tmp == -1)
-        printf("getpeername() fail, errno = %d\n",errno);
-      else{
-        char host_buf[64];
-        char serv_buf[64];
-        bzero(&host_buf,sizeof(host_buf));
-        bzero(&serv_buf,sizeof(serv_buf));
-        tmp = getnameinfo(&addr1, len1, host_buf, sizeof(host_buf),\
-                          serv_buf, sizeof(host_buf), NI_NAMEREQD);
-        if(tmp != 0)
-          printf("getnameinfo() fail!!errno = %d\n", errno);
-        else
-          printf("2.host_buf = %s, serv_buf = %s\n",host_buf,serv_buf);
-      }
-
-      //***********************
-
-
       //父进程结束, 回收资源
       shutdown(sfd_acc,2);
       close(sfd_acc);
@@ -361,6 +311,7 @@ void inline free_test_sfd(void){
   shutdown(sfd_cli,2);
   close(sfd_cli);
 }
+
 
 
 
